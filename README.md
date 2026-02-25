@@ -1,13 +1,26 @@
 Adani AI Labs – Hourly Energy Demand Forecasting
-1. Problem Overview
 
-The objective of this assessment is to forecast hourly electricity consumption using six years of historical transmission system operator data. The dataset represents a univariate time series with strong seasonal and autoregressive characteristics.
+ 1. Problem Overview
 
-The goal is to build a robust forecasting model that accurately predicts future hourly demand while demonstrating structured preprocessing, meaningful feature engineering, appropriate model selection, benchmarking, and clear interpretation of results.
+The objective of this assessment is to forecast hourly electricity consumption using six years of historical transmission system operator data.
 
-2. Dataset Description
+The dataset represents a univariate time series with strong seasonal and autoregressive behavior.
 
-Six years of hourly electricity consumption data
+The goal was to build a data-driven forecasting model that:
+
+Accurately predicts future hourly demand
+
+Demonstrates structured preprocessing
+
+Applies meaningful feature engineering
+
+Uses proper time-aware evaluation
+
+Provides business-relevant insights
+
+ 2. Dataset Description
+
+6 years of hourly electricity consumption
 
 52,966 original observations
 
@@ -21,30 +34,31 @@ Electricity consumption (MWh)
 
 The dataset reflects real-world grid operations and includes minor timestamp irregularities likely due to daylight saving transitions.
 
-3. Data Preprocessing
-3.1 Timestamp Handling
+ 3. Data Preprocessing
 
-Converted timestamps to datetime format.
+🔹 Timestamp Handling
 
-Sorted observations chronologically to preserve temporal integrity.
+Converted timestamps to datetime format
 
-Validated time intervals between observations.
+Sorted data chronologically
 
-Minor irregular intervals (55/65 minutes) were retained as they represent operational realities.
+Validated time intervals
 
-3.2 Data Cleaning
+Retained minor 55/65-minute gaps (real operational behavior)
 
-Removed redundant End time UTC column.
+🔹 Data Cleaning
 
-Ensured no missing values remained after feature engineering.
+Removed redundant End time UTC
 
-Prevented data leakage during lag and rolling feature construction.
+Prevented data leakage during feature creation
 
-4. Feature Engineering
+Ensured complete integrity before modeling
 
-Electricity demand exhibits strong temporal dependence. Feature engineering focused on capturing seasonality, short-term momentum, and trend behavior.
+ 4. Feature Engineering
 
-4.1 Calendar Features
+Electricity demand exhibits strong temporal memory. Feature engineering focused on capturing:
+
+🔹 Calendar Features
 
 Hour of day
 
@@ -58,99 +72,91 @@ Year
 
 Weekend indicator
 
-These capture structured seasonal and macro demand effects.
+🔹 Lag Features (Autoregressive Memory)
 
-4.2 Lag Features (Autoregressive Memory)
-
-lag_1 → Previous hour demand
+lag_1 → Previous hour
 
 lag_24 → Same hour previous day
 
 lag_168 → Same hour previous week
 
-Lag features capture short-term inertia and daily/weekly repetition patterns.
-
-4.3 Rolling Mean Features
+🔹 Rolling Mean Features
 
 24-hour rolling mean
 
 168-hour rolling mean
 
-Rolling averages provide smoothed recent demand trends.
+Rolling calculations were shifted to ensure no data leakage.
 
-To avoid leakage, rolling computations were shifted to ensure only historical data was used.
-
-5. Train-Test Strategy
+ 5. Train-Test Strategy
 
 A chronological split was used instead of random shuffling:
 
-First 80% → Training set
+First 80% → Training
 
-Last 20% → Testing set
+Last 20% → Testing
 
-This simulates real-world forecasting, where future values must be predicted using past information only.
+This ensures realistic forecasting conditions where future values are predicted strictly from past data.
 
 6. Model Selection and Justification
 
-Several regression and forecasting approaches were evaluated conceptually:
+Several models were evaluated conceptually:
 
-Linear Regression
+🔹 Linear Regression
 
-Simple and interpretable.
+Simple and interpretable
 
-Assumes linear relationships.
+Assumes linearity
 
-Struggles to capture nonlinear interactions and peak demand behavior.
+Underfits nonlinear seasonal patterns
 
-Decision Tree Regressor
+🔹 Decision Tree
 
-Captures nonlinear patterns.
+Captures nonlinearities
 
-However, single trees are prone to overfitting and instability.
+Prone to instability
 
-Random Forest Regressor
+🔹 Random Forest
 
-Handles nonlinearities well.
+Handles nonlinear relationships
 
-Reduces variance through bagging.
+Trees built independently
 
-However, trees are built independently and do not sequentially correct errors.
+Does not sequentially correct errors
 
-Classical Time-Series Models (ARIMA/SARIMA)
+🔹 ARIMA 
 
-Explicitly model autoregressive structure.
+Strong autoregressive modeling
 
-Strong for stationary series.
+Less flexible with engineered features
 
-Less flexible when incorporating engineered lag and rolling features.
+Limited with multiple nonlinear seasonal effects
 
-Struggle with multiple seasonalities and nonlinear effects.
-
-Why XGBoost Was Selected
+✅ Why XGBoost Was Selected
 
 XGBoost (Extreme Gradient Boosting) was chosen because:
 
-It builds trees sequentially, correcting previous prediction errors.
+Builds trees sequentially, correcting errors
 
-It effectively captures nonlinear relationships.
+Captures nonlinear interactions
 
-It handles complex interactions between lag and seasonal features.
+Handles complex lag-based features effectively
 
-It includes regularization to control overfitting.
+Includes built-in regularization
 
-It performs strongly on structured tabular datasets.
+Performs exceptionally well on structured tabular data
 
-It does not require feature scaling.
+Requires no feature scaling
 
-Given the transformation of the time series into a supervised regression problem using lag features, gradient boosting provided the most effective balance between flexibility, accuracy, and generalization.
+Given the lag-based transformation of the time series into a supervised regression problem, gradient boosting provided the optimal balance of flexibility and generalization.
 
-7. Baseline Benchmark
+ 7. Baseline Benchmark
 
-A naive benchmark model was implemented using:
+A naive benchmark was implemented:
 
-Prediction = Demand at the same hour on the previous day (lag_24)
+Prediction = Demand at same hour previous day (lag_24)
 
-Baseline Performance:
+Baseline Performance
 
 MAE: 366.78
 
@@ -158,9 +164,9 @@ RMSE: 507.48
 
 MAPE: 3.73%
 
-This baseline captures daily seasonality but ignores short-term momentum and weekly patterns.
+This captures daily seasonality but ignores short-term momentum.
 
-8. Final Model Performance (Tuned XGBoost)
+ 8. Final Model Performance (Tuned XGBoost)
 
 MAE: 80.07
 
@@ -168,95 +174,79 @@ RMSE: 112.10
 
 MAPE: 0.83%
 
-The proposed model reduced forecasting error by approximately 78% compared to the naive baseline, demonstrating the value of incorporating autoregressive memory and rolling trend signals.
+The model reduced forecasting error by approximately 78% compared to the naive baseline, demonstrating the importance of incorporating autoregressive memory and rolling trend features.
 
-9. Model Insights
-9.1 Dominance of Short-Term Memory
+ 9. Model Insights
+🔹 Short-Term Inertia Dominates
 
-Feature importance analysis revealed:
+lag_1 was the most influential predictor.
+Hourly demand is highly autocorrelated.
 
-lag_1 (previous hour) was the most influential predictor.
+🔹 Strong Daily Seasonality
 
-lag_24 (daily seasonality) was the second strongest.
+lag_24 was the second strongest feature.
+Demand patterns repeat consistently across days.
 
-This indicates that electricity demand is highly autocorrelated and strongly driven by immediate historical behavior.
+🔹 Calendar Variables Are Secondary
 
-9.2 Daily Seasonality Is Structurally Stable
+Explicit calendar features had lower importance once lag memory was introduced.
 
-The strong influence of lag_24 confirms that hourly demand patterns repeat consistently across days, making short-term forecasting highly reliable.
+This confirms that historical demand encodes seasonality more effectively than categorical labels alone.
 
-9.3 Calendar Features Have Secondary Impact
+📉 10. Error Analysis
 
-Once lag features were introduced, explicit calendar variables contributed less importance. This suggests that historical demand already encodes seasonal effects effectively.
+Errors centered around zero
 
-10. Error Analysis
+No systematic bias observed
 
-Prediction errors were centered around zero.
+Large errors limited to extreme demand spikes
 
-No significant systematic bias was observed.
+MAPE < 1% → Highly accurate short-term forecasting
 
-Large errors were limited to extreme demand spikes.
+ 11. Implications for Energy Management & Sustainability
 
-A MAPE below 1% indicates highly accurate short-term forecasting.
+Accurate hourly forecasting enables:
 
-The model demonstrates stable generalization and strong predictive consistency.
-
-11. Implications for Energy Management and Sustainability
-
-Accurate hourly demand forecasting has meaningful operational and environmental impact.
-
-11.1 Grid Stability and Operational Efficiency
+🔹 Grid Stability
 
 Improved generation scheduling
 
-Reduced reserve margin requirements
+Better reserve management
 
-Better load balancing
+Reduced operational uncertainty
 
-Lower operational uncertainty
+🔹 Cost Optimization
 
-11.2 Reduced Overproduction
+Reduced overproduction
 
-Accurate forecasts reduce:
+Lower reliance on expensive peaking plants
 
-Excess generation
+🔹 Renewable Integration
 
-Energy waste
+Better alignment of renewable generation with load
 
-Inefficient ramp-ups
-
-This improves cost efficiency and operational optimization.
-
-11.3 Renewable Energy Integration
-
-Reliable demand forecasts enable:
-
-Better alignment of renewable generation with expected load
-
-Optimized storage utilization
+Improved storage utilization
 
 Reduced renewable curtailment
 
-More efficient grid dispatch planning
+🔹 Sustainability Impact
 
-11.4 Carbon Emission Reduction
+Lower fossil fuel ramp-ups
 
-Better forecasting reduces reliance on:
+Reduced emissions
 
-Emergency fossil-fuel ramp-ups
+Improved decarbonization efficiency
 
-Inefficient peaking plants
+Reliable forecasting directly contributes to efficient and sustainable grid operations.
 
-This contributes directly to lower emissions and improved sustainability outcomes.
+ 12. Future Improvements
 
-12. Future Improvements
+🔹 Incorporate weather variables
 
-Incorporate weather variables (temperature, humidity)
+🔹 Add holiday indicators
 
-Add holiday indicators
+🔹 Implement walk-forward validation
 
-Implement walk-forward validation
+🔹 Explore probabilistic forecasting
 
-Explore probabilistic forecasting
-
-Extend to multi-step forecasting scenarios
+🔹 Extend to multi-step forecasting
