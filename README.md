@@ -1,3 +1,7 @@
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/065010-AmanMalhi/adani-energy-demand-forecasting/blob/main/code/energy_forecasting.ipynb)
+> Interactive Plotly charts may not fully render in GitHub preview.  
+> Please open the notebook in Google Colab using the badge above.
+
 Adani AI Labs – Hourly Energy Demand Forecasting
 
  1. Problem Overview
